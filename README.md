@@ -9,7 +9,6 @@ Get subsets of (-i) Oxford Nanopore Technologies (ONT) basecalled fastq reads in
 ## Notes
 
 	- example output, see \`sandbox/nanotimeparse-test.fq/\`, and check log for details
-	- dependencies: GNU Parallel [1], GNU Core Utils; see README.md for full list
 	- using INT for minutes is preferrable, FLOAT may work if p/s = INT, e.g. n = 4/0.25 = 16
 	- for best results, concatenate all fastq files from a single ONT flowcell
 
@@ -19,7 +18,7 @@ Get subsets of (-i) Oxford Nanopore Technologies (ONT) basecalled fastq reads in
 
 	-h	help		help message
 	-t	INT		number of threads to GNU parallel over
-	-i	FASTQ		input basecalled nanopore fastq
+	-i	FASTQ		input ONT basecalled fastq
 	-s	INT or float	time slice in (minutes)
 	-p	INT or float	period of time to slice up since start of sequencing run (minutes)
 
@@ -37,10 +36,12 @@ Clone this repo with:
 
 `git clone https://github.com/raplayer/nanotimeparse.git`
 
-If you'd like to call the tool globally, symbolically link the shell script into a $PATH path.
-For example:
+If you'd like to call the tool globally, symbolically link the shell script into a $PATH path. For example:
 
 `sudo ln -s $PWD/nanotimepare/nanotimeparse.sh /usr/local/bin`
+
+
+## License and Copyright
 
 
 ## References
