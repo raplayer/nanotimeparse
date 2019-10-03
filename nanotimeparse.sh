@@ -38,12 +38,12 @@ EOF
 
 make_since1970()
 {
-	$bin/mkdir "$1-tmp"
-	$bin/sed -e 's/.*start_time=//' -e 's/Z flow_cell.*\t/\t/' -e 's/T/ /' "$1" | $bin/sort -T "$outdir/tmp/sort" > "$1-tmp/datetime.seq"
-	$bin/cut -f1 "$1-tmp/datetime.seq" > "$1-tmp/datetime.list"
-	$bin/date --file="$1-tmp/datetime.list" +%s > "$1-tmp/since1970.list"
-	$bin/cat "$1-tmp/since1970.list" >> "$outdir/tmp/since1970.list"
-	paste <($bin/sort -T "$outdir/tmp/sort" "$1-tmp/since1970.list") <($bin/sort -T "$outdir/tmp/sort" "$1-tmp/datetime.seq" | $bin/cut -f2) >> "$outdir/tmp/since1970.array"
+	mkdir "$1-tmp"
+	sed -e 's/.*start_time=//' -e 's/Z.*\t/\t/' -e 's/T/ /' "$1" | sort -T "$outdir/tmp/sort" > "$1-tmp/datetime.seq"
+	cut -f1 "$1-tmp/datetime.seq" > "$1-tmp/datetime.list"
+	date --file="$1-tmp/datetime.list" +%s > "$1-tmp/since1970.list"
+	cat "$1-tmp/since1970.list" >> "$outdir/tmp/since1970.list"
+	paste <(sort -T "$outdir/tmp/sort" "$1-tmp/since1970.list") <(sort -T "$outdir/tmp/sort" "$1-tmp/datetime.seq" | cut -f2) >> "$outdir/tmp/since1970.array"
 
 }
 export bin outdir
@@ -51,11 +51,11 @@ export -f make_since1970
 
 make_diff()
 {
-	t1=$($bin/basename "$1" | $bin/sed -e 's/.*-//' -e 's/\.fasta//')
-	t2=$($bin/basename "$2" | $bin/sed -e 's/.*-//' -e 's/\.fasta//')
+	t1=$(basename "$1" | sed -e 's/.*-//' -e 's/\.fasta//')
+	t2=$(basename "$2" | sed -e 's/.*-//' -e 's/\.fasta//')
 	printf "processing: $t1\t$t2\n"
-	$bin/comm -13 <($bin/grep "^>" "$1" | $bin/sort -T "$outdir/tmp/sort") <($bin/grep "^>" "$2" | $bin/sort -T "$outdir/tmp/sort") > "$outdir/tmp/diff.from$t1-$t2"
-	$bin/grep -A1 -f "$outdir/tmp/diff.from$t1-$t2" "$2"  | $bin/grep -v "\-\-" > "$outdir/from$t1-$t2.fasta"
+	comm -13 <(grep "^>" "$1" | sort -T "$outdir/tmp/sort") <(grep "^>" "$2" | sort -T "$outdir/tmp/sort") > "$outdir/tmp/diff.from$t1-$t2"
+	grep -A1 -f "$outdir/tmp/diff.from$t1-$t2" "$2"  | grep -v "\-\-" > "$outdir/from$t1-$t2.fasta"
 }
 export t1 t2 outdir
 export -f make_diff
@@ -75,19 +75,7 @@ if [[ $? != 0 ]]; then
 	echo "example: ln -s /usr/bin/dirname /full/path/to/nanoparse/bin/dirname"
 	exit
 fi
-bin="$scriptdir/bin"
 
-# create bin of paths to dependencies
-if [[ ! -f "$scriptdir/install.complete" ]]; then
-	echo "installing..."
-	if [[ -d "$bin" ]]; then rm -r "$bin"; fi
-	mkdir "$bin"
-	whereis "cat" "mkdir" "sed" "sort" "cut" "date" "paste" "basename" "printf" "comm" "grep" "awk" "uniq" "dirname" "split" "find" "parallel" "head" "bc" "seq" "tail" "wc" | cut -f2 -d' ' | while read path; do
-		util=$(basename "$path")
-		ln -s "$path" "$bin/$util"
-	done
-	touch "$scriptdir/install.complete"
-fi
 
 # parse args
 while getopts "ht:i:s:p:" OPTION
@@ -102,114 +90,114 @@ do
 	esac
 done
 # check args
-if [[ -z "$THREADS" ]]; then $bin/printf "%s\n" "Please specify number of threads (-t)."; exit; fi
-if [[ -z "$INPUT" ]]; then $bin/printf "%s\n" "Please specify input fastq (-i)."; exit; fi
-if [[ ! -f "$INPUT" ]]; then $bin/printf "%s\n" "The input (-i) $INPUT file does not exist."; exit; fi
-if [[ -z "$SLICE" ]]; then $bin/printf "%s\n" "Please specify slice time (-s)."; exit; fi
-if [[ -z "$PERIOD" ]]; then $bin/printf "%s\n" "Please specify period time (-p)."; exit; fi
+if [[ -z "$THREADS" ]]; then printf "%s\n" "Please specify number of threads (-t)."; exit; fi
+if [[ -z "$INPUT" ]]; then printf "%s\n" "Please specify input fastq (-i)."; exit; fi
+if [[ ! -f "$INPUT" ]]; then printf "%s\n" "The input (-i) $INPUT file does not exist."; exit; fi
+if [[ -z "$SLICE" ]]; then printf "%s\n" "Please specify slice time (-s)."; exit; fi
+if [[ -z "$PERIOD" ]]; then printf "%s\n" "Please specify period time (-p)."; exit; fi
 
 # quick and dirty fastq checks
 #	check 1 ensures that every 4th line starting with line 1 starts with the '@' character
 #	check 2 is a very rough check of ONT format by searching for 'start_time=' in headers
 #			if total reads == number of times 'start_time=' is found, we should be good to parse
-fqcheck=$($bin/awk 'NR % 4 == 1' "$INPUT" | $bin/cut -c1 | $bin/sort -T "$outdir/tmp/sort" | $bin/uniq -c | $bin/sed -e 's/ \+//' -e 's/ /\t/')
-char=$($bin/printf "$fqcheck" | $bin/cut -f2)
+fqcheck=$(awk 'NR % 4 == 1' "$INPUT" | cut -c1 | sort -T "$outdir/tmp/sort" | uniq -c | sed -e 's/ \+//' -e 's/ /\t/')
+char=$(printf "$fqcheck" | cut -f2)
 if [[ "$char" != "@" ]]; then
-	$bin/printf "%s\n%s\n%s\n%s\n%s\n" "Check 1 error, all headers do not start with '@'." "The input (-i) does not appear to be fastq formatted." "Here's what we found (<count>\t<first character>):" "$fqcheck" "Process terminated."
+	printf "%s\n%s\n%s\n%s\n%s\n" "Check 1 error, all headers do not start with '@'." "The input (-i) does not appear to be fastq formatted." "Here's what we found (<count>\t<first character>):" "$fqcheck" "Process terminated."
 	exit
 fi
-totalreads=$($bin/awk 'END{print(NR/4)}' "$INPUT")
-starttimes=$($bin/grep -o "start_time=" "$INPUT" | $bin/wc -l)
+totalreads=$(awk 'END{print(NR/4)}' "$INPUT")
+starttimes=$(grep -o "start_time=" "$INPUT" | wc -l)
 if [[ "$totalreads" != "$starttimes" ]]; then
-	$bin/printf "%s\n%s\n%s\n" "Check 2 error, there are more start times ($starttimes) than number of reads ($totalreads)." "The input (-i) does not appear to be ONT formatted." "Process terminated."
+	printf "%s\n%s\n%s\n" "Check 2 error, there are more start times ($starttimes) than number of reads ($totalreads)." "The input (-i) does not appear to be ONT formatted." "Process terminated."
 	exit
 fi
-$bin/echo "Checks completed successfully."
+printf "%s\n" "Checks completed successfully."
 # if checks ok, rename some inputs
 fastq="$INPUT"
 window_min="$SLICE"
 period="$PERIOD"
 
 # setup other variables
-runtime=$($bin/date +"%Y%m%d%H%M%S%N")
-window_sec=$($bin/printf "%s" "$window_min" | $bin/awk '{print($0*60)}')
-indir=$($bin/dirname "$fastq")
-inbase=$($bin/basename "$fastq")
+runtime=$(date +"%Y%m%d%H%M%S%N")
+window_sec=$(printf "%s" "$window_min" | awk '{print($0*60)}')
+indir=$(dirname "$fastq")
+inbase=$(basename "$fastq")
 outdir="$indir/nanotimeparse-$inbase"
-$bin/mkdir -p "$outdir/tmp/sort"
+mkdir -p "$outdir/tmp/sort"
 
 # print commands etc to log
-$bin/printf "\n%s\n" "Runtime $runtime" >> "$outdir/nanotimeparse.log"
-$bin/printf "%s\n" "nanotimeparse.sh -t $THREADS -i $INPUT -s $SLICE -p $PERIOD" >> "$outdir/nanotimeparse.log"
-$bin/printf "%s\t%s\n" "Input fastq:" "$fastq" >> "$outdir/nanotimeparse.log"
-$bin/printf "%s\t%s\n" "Window(mins):" "$window_min" >> "$outdir/nanotimeparse.log"
-$bin/printf "%s\t%s\n" "window(sec):" "$window_sec" >> "$outdir/nanotimeparse.log"
-$bin/printf "%s\t%s\n" "Period(mins):" "$period" >> "$outdir/nanotimeparse.log"
+printf "\n%s\n" "Runtime $runtime" >> "$outdir/nanotimeparse.log"
+printf "%s\n" "nanotimeparse.sh -t $THREADS -i $INPUT -s $SLICE -p $PERIOD" >> "$outdir/nanotimeparse.log"
+printf "%s\t%s\n" "Input fastq:" "$fastq" >> "$outdir/nanotimeparse.log"
+printf "%s\t%s\n" "Window(mins):" "$window_min" >> "$outdir/nanotimeparse.log"
+printf "%s\t%s\n" "window(sec):" "$window_sec" >> "$outdir/nanotimeparse.log"
+printf "%s\t%s\n" "Period(mins):" "$period" >> "$outdir/nanotimeparse.log"
 
 
 #	MAIN
 #===============================================================================
 # convert fastq to fasta2col, then split into 4000 reads per file
-$bin/sed $'$!N;s/\\\n/\t/' "$fastq" | $bin/sed $'$!N;s/\\\n/\t/' | $bin/cut -f1,2 > "$outdir/tmp/input.fasta2col"
-$bin/split -l 10000 "$outdir/tmp/input.fasta2col" "$outdir/tmp/split_fasta2col."
+sed $'$!N;s/\\\n/\t/' "$fastq" | sed $'$!N;s/\\\n/\t/' | cut -f1,2 > "$outdir/tmp/input.fasta2col"
+split -l 10000 "$outdir/tmp/input.fasta2col" "$outdir/tmp/split_fasta2col."
 
 # get list of all start timepoints for all reads
 if [[ ! -f "$outdir/tmp/since1970.list" ]]; then
-	$bin/printf "Making read start time list...\n"
-	$bin/find "$outdir/tmp/" -name "split_fasta2col.*" -print0 | parallel -0 -n 1 -P "$THREADS" -I '{}' make_since1970 '{}'
+	printf "Making read start time list...\n"
+	find "$outdir/tmp/" -name "split_fasta2col.*" -print0 | parallel -0 -n 1 -P "$THREADS" -I '{}' make_since1970 '{}'
 else
-	$bin/printf "The file 'since1970.list' already exists @ '$outdir/'\n"
+	printf "The file 'since1970.list' already exists @ '$outdir/'\n"
 fi
 
 # find earliest time point
-basetime=$($bin/sort -T "$outdir/tmp/sort" "$outdir/tmp/since1970.list" | $bin/head -1)
-$bin/printf "\trun start:\t$basetime\n"
-$bin/printf "%s\t%s\n" "basetime:" "$basetime" >> "$outdir/nanotimeparse.log"
+basetime=$(sort -T "$outdir/tmp/sort" "$outdir/tmp/since1970.list" | head -1)
+printf "\trun start:\t$basetime\n"
+printf "%s\t%s\n" "basetime:" "$basetime" >> "$outdir/nanotimeparse.log"
 #printf "%s\t%s\n" "lasttime:" "$lasttime" >> "$outdir/nanotimeparse.log"
 
 #	setup cut times
 # iterate starting at $basetime+window_sec ($2*60), out to $basetime+period_sec ($3*60)
-cut_start=$($bin/printf "%0.0f\n" $($bin/bc -l <<< "$basetime+$window_sec"))
-$bin/printf "%s\t%s\n" "cut_start:" "$cut_start" >> "$outdir/nanotimeparse.log"
-$bin/printf "\tcut start:\t$cut_start\n"
-cut_stop=$($bin/printf "%0.0f\n" $($bin/bc -l <<< "$basetime+($period*60)"))
-$bin/printf "%s\t%s\n" "cut_stop:" "$cut_stop" >> "$outdir/nanotimeparse.log"
-$bin/printf "\tcut stop:\t$cut_stop\n"
+cut_start=$(printf "%0.0f\n" $(bc -l <<< "$basetime+$window_sec"))
+printf "%s\t%s\n" "cut_start:" "$cut_start" >> "$outdir/nanotimeparse.log"
+printf "\tcut start:\t$cut_start\n"
+cut_stop=$(printf "%0.0f\n" $(bc -l <<< "$basetime+($period*60)"))
+printf "%s\t%s\n" "cut_stop:" "$cut_stop" >> "$outdir/nanotimeparse.log"
+printf "\tcut stop:\t$cut_stop\n"
 
 # make file of each time slice
 if [[ ! -f "$outdir/set1.complete" ]]; then
-	$bin/printf "Generating set 1 files...\n"
-	$bin/seq "$cut_start" "$window_sec" "$cut_stop" > "$outdir/tmp/since1970.slicetimes"
+	printf "Generating set 1 files...\n"
+	seq "$cut_start" "$window_sec" "$cut_stop" > "$outdir/tmp/since1970.slicetimes"
 	# make separate fasta for each 'time slice'
-	while read time; do $bin/awk -F'\t' -v time="$time" '{fnrheader[NR]=$1; fnrseq[NR]=$2}END{for(i=1;i<length(fnrheader);i++){if(fnrheader[i]<time){printf(">%s\n%s\n",fnrheader[i],fnrseq[i])}}}' "$outdir/tmp/since1970.array" > "$outdir/fromStart-$time.fasta"; done < "$outdir/tmp/since1970.slicetimes"
+	while read time; do awk -F'\t' -v time="$time" '{fnrheader[NR]=$1; fnrseq[NR]=$2}END{for(i=1;i<length(fnrheader);i++){if(fnrheader[i]<time){printf(">%s\n%s\n",fnrheader[i],fnrseq[i])}}}' "$outdir/tmp/since1970.array" > "$outdir/fromStart-$time.fasta"; done < "$outdir/tmp/since1970.slicetimes"
 	touch "$outdir/set1.complete"
 else
-	$bin/printf "Set 1 already generated, moving on.\n"
+	printf "Set 1 already generated, moving on.\n"
 fi
 
 
 # only output reads produced during the time slice
 # from 'basetime' to 'cut_start' (the first fasta)
 if [[ ! -f "$outdir/set2.complete" ]]; then
-	$bin/printf "Generating set 2 files...\n"
-	$bin/cat "$outdir/fromStart-$cut_start.fasta" > "$outdir/from$basetime-$cut_start.fasta"
+	printf "Generating set 2 files...\n"
+	cat "$outdir/fromStart-$cut_start.fasta" > "$outdir/from$basetime-$cut_start.fasta"
 	# and the rest
-	$bin/parallel --xapply --jobs="$THREADS" make_diff \
-		::: $($bin/find "$outdir" -maxdepth 1 -name "fromStart*fasta" | $bin/sort -T "$outdir/tmp/sort" | $bin/head -n-1) \
-		::: $($bin/find "$outdir" -maxdepth 1 -name "fromStart*fasta" | $bin/sort -T "$outdir/tmp/sort" | $bin/tail -n+2)
+	parallel --xapply --jobs="$THREADS" make_diff \
+		::: $(find "$outdir" -maxdepth 1 -name "fromStart*fasta" | sort -T "$outdir/tmp/sort" | head -n-1) \
+		::: $(find "$outdir" -maxdepth 1 -name "fromStart*fasta" | sort -T "$outdir/tmp/sort" | tail -n+2)
 	touch "$outdir/set2.complete"
 else
-	$bin/printf "Set 2 already generated, moving on.\n"
+	printf "Set 2 already generated, moving on.\n"
 fi
 
 
-$bin/printf "Checking total output files...\n"
-expected=$($bin/printf "%0.0f\n" $($bin/bc -l <<< "$PERIOD/$SLICE"))
-actual=$($bin/find $outdir -maxdepth 1 -name "fromStart*fasta" | $bin/wc -l)
+printf "Checking total output files...\n"
+expected=$(printf "%0.0f\n" $(bc -l <<< "$PERIOD/$SLICE"))
+actual=$(find $outdir -maxdepth 1 -name "fromStart*fasta" | wc -l)
 if [[ "$expected" == "$actual" ]]; then
-	$bin/printf "\t(p/s) == expected == actual :: ($PERIOD/$SLICE) == $expected == $actual\n"
-	$bin/printf "\tnanotimeparse.sh completed successfully, yay!\n"
+	printf "\t(p/s) == expected == actual :: ($PERIOD/$SLICE) == $expected == $actual\n"
+	printf "\tnanotimeparse.sh completed successfully, yay!\n"
 else
-	$bin/printf "\t(p/s) != expected != actual :: ($PERIOD/$SLICE) != $expected != $actual\n"
-	$bin/printf "\tsomething's not right, booo...\n"
+	printf "\t(p/s) != expected != actual :: ($PERIOD/$SLICE) != $expected != $actual\n"
+	printf "\tsomething's not right, booo...\n"
 fi
