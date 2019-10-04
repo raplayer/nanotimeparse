@@ -25,12 +25,13 @@ Get subsets of (-i) Oxford Nanopore Technologies (ONT) basecalled fastq reads in
 
 ## Dependencies
 
-GNU CoreUtils: cat, mkdir, sed, sort, cut, date, paste, basename, printf, comm, grep, awk, uniq, dirname, split, find, parallel [1], head, bc, seq, tail, wc
-
+GNU Parallel [1] and GNU CoreUtils: cat, mkdir, sed, sort, cut, date, paste, basename, printf, comm, grep, awk, uniq, dirname, split, find, head, bc, seq, tail, wc
 
 ## Installation
 
-Paths to dependencies will be found and symlinked to `nanotimeparse/bin/` upon initial run. This directory and a file named `install.complete` will be created. The `install.complete` file is the switch to determine if dependencies will be searched for (i.e. delete it if you want to regenerate symlinks).
+The only non-GNU CoreUtils dependency is GNU Parallel [1], please install using the command:
+
+`sudo apt install parallel`
 
 Clone this repo with:
 

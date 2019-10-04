@@ -36,6 +36,14 @@ References:
 EOF
 }
 
+# Function description:	make_since1970
+#	arguments:	arg1 - one of the split fasta files derived from input fastq
+#	actions:	Pulls start datetime of read generation from header of each read in the fasta file.
+#				Converts each to a format usable by the 'date' GNU CoreUtil, stores datetimes in 'datetime.list'.
+#					example, 'start_time=2018-08-05T06:35:49Z' > '2018-08-05 06:35:49'
+#				Call 'date' function on the list, converts datetimes to Unix Epoch time (seconds since 01/01/1970).
+#	output:		A concatenated list of all 'since1970' times for all reads in input.
+#				These times are used as headers for reads in final script output, and are utilized in the make_diff function.
 make_since1970()
 {
 	mkdir "$1-tmp"
@@ -49,6 +57,15 @@ make_since1970()
 export bin outdir
 export -f make_since1970
 
+# Function description:	make_diff
+#	arguments:	arg1 - fasta file containing reads from $basetime to since1970 time in file name
+#				arg2 - same fasta type but containing reads from $basetime to the next time slice
+#	actions:	Finds non-overlapping reads in arg1 and arg2 fastas via 'comm -13' function.
+#					comm:	Compare sorted files FILE1 and FILE2 line by line.
+#					  -1              suppress column 1 (lines unique to FILE1)
+#					  -2              suppress column 2 (lines unique to FILE2)	<- omitted
+#					  -3              suppress column 3 (lines that appear in both files)
+#	output:		A fasta file containing only newly generated reads between times indicated in the file names.
 make_diff()
 {
 	t1=$(basename "$1" | sed -e 's/.*-//' -e 's/\.fasta//')
@@ -127,18 +144,20 @@ outdir="$indir/nanotimeparse-$inbase"
 mkdir -p "$outdir/tmp/sort"
 
 # print commands etc to log
-printf "\n%s\n" "Runtime $runtime" >> "$outdir/nanotimeparse.log"
-printf "%s\n" "nanotimeparse.sh -t $THREADS -i $INPUT -s $SLICE -p $PERIOD" >> "$outdir/nanotimeparse.log"
-printf "%s\t%s\n" "Input fastq:" "$fastq" >> "$outdir/nanotimeparse.log"
-printf "%s\t%s\n" "Window(mins):" "$window_min" >> "$outdir/nanotimeparse.log"
-printf "%s\t%s\n" "window(sec):" "$window_sec" >> "$outdir/nanotimeparse.log"
-printf "%s\t%s\n" "Period(mins):" "$period" >> "$outdir/nanotimeparse.log"
+log="$outdir/nanotimeparse.log-runtime_$runtime"
+printf "\n%s\n" "Runtime $runtime" > "$log"
+printf "%s\n" "nanotimeparse.sh -t $THREADS -i $INPUT -s $SLICE -p $PERIOD" >> "$log"
+printf "%s\t%s\n" "Input fastq:" "$fastq" >> "$log"
+printf "%s\t%s\n" "Window(mins):" "$window_min" >> "$log"
+printf "%s\t%s\n" "window(sec):" "$window_sec" >> "$log"
+printf "%s\t%s\n" "Period(mins):" "$period" >> "$log"
 
 
 #	MAIN
 #===============================================================================
 # convert fastq to fasta2col, then split into 4000 reads per file
 sed $'$!N;s/\\\n/\t/' "$fastq" | sed $'$!N;s/\\\n/\t/' | cut -f1,2 > "$outdir/tmp/input.fasta2col"
+sed -i 's/^@/>/' "$outdir/tmp/input.fasta2col"
 split -l 10000 "$outdir/tmp/input.fasta2col" "$outdir/tmp/split_fasta2col."
 
 # get list of all start timepoints for all reads
@@ -152,16 +171,16 @@ fi
 # find earliest time point
 basetime=$(sort -T "$outdir/tmp/sort" "$outdir/tmp/since1970.list" | head -1)
 printf "\trun start:\t$basetime\n"
-printf "%s\t%s\n" "basetime:" "$basetime" >> "$outdir/nanotimeparse.log"
-#printf "%s\t%s\n" "lasttime:" "$lasttime" >> "$outdir/nanotimeparse.log"
+printf "%s\t%s\n" "basetime:" "$basetime" >> "$log"
+#printf "%s\t%s\n" "lasttime:" "$lasttime" >> "$log"
 
 #	setup cut times
 # iterate starting at $basetime+window_sec ($2*60), out to $basetime+period_sec ($3*60)
 cut_start=$(printf "%0.0f\n" $(bc -l <<< "$basetime+$window_sec"))
-printf "%s\t%s\n" "cut_start:" "$cut_start" >> "$outdir/nanotimeparse.log"
+printf "%s\t%s\n" "cut_start:" "$cut_start" >> "$log"
 printf "\tcut start:\t$cut_start\n"
 cut_stop=$(printf "%0.0f\n" $(bc -l <<< "$basetime+($period*60)"))
-printf "%s\t%s\n" "cut_stop:" "$cut_stop" >> "$outdir/nanotimeparse.log"
+printf "%s\t%s\n" "cut_stop:" "$cut_stop" >> "$log"
 printf "\tcut stop:\t$cut_stop\n"
 
 # make file of each time slice
@@ -180,6 +199,7 @@ fi
 # from 'basetime' to 'cut_start' (the first fasta)
 if [[ ! -f "$outdir/set2.complete" ]]; then
 	printf "Generating set 2 files...\n"
+	printf "processing: $basetime\t$cut_start\n"
 	cat "$outdir/fromStart-$cut_start.fasta" > "$outdir/from$basetime-$cut_start.fasta"
 	# and the rest
 	parallel --xapply --jobs="$THREADS" make_diff \
