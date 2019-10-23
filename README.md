@@ -8,9 +8,10 @@ Get subsets of (-i) Oxford Nanopore Technologies (ONT) basecalled fastq reads in
 
 ## Notes
 
+	- for best results, p should be evenly divisible by s (i.e. p/s = INT)
+	- using INT for minutes is preferrable, however, FLOAT is fine if p/s = INT
 	- example output, see \`sandbox/nanotimeparse-test.fq/\`, and check log for details
-	- using INT for minutes is preferrable, FLOAT may work if p/s = INT, e.g. n = 4/0.25 = 16
-	- for best results, concatenate all fastq files from a single ONT flowcell
+	- be sure to concatenate all fastq files output from a single ONT flowcell
 
 ## Usage
 
@@ -19,8 +20,8 @@ Get subsets of (-i) Oxford Nanopore Technologies (ONT) basecalled fastq reads in
 	-h	help		help message
 	-t	INT		number of threads to GNU parallel over
 	-i	FASTQ		input ONT basecalled fastq
-	-s	INT or float	time slice in (minutes)
-	-p	INT or float	period of time to slice up since start of sequencing run (minutes)
+	-s	INT or FLOAT	time slice in (minutes)
+	-p	INT or FLOAT	period of time to slice up since start of sequencing run (minutes)
 
 
 ## Dependencies

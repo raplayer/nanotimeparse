@@ -13,10 +13,11 @@ Help message for \`nanotimeparse.sh\`:
 	Get subsets of (-i) Oxford Nanopore Technologies (ONT) basecalled fastq reads in slices of (-s) minutes, over a period of (-p) minutes. Input fastq file is output as 2 sets of n fasta files (n = p/s). Set 1 is n fasta files, and each file contains reads generated from the start of the ONT run to each time slice. Set 2 is also n fasta files, but each file contains only newly generated reads between each time slice.
 
 NOTES:
-	- example output, see \`sandbox/nanotimeparse-test.fq/\`, and check log for details
+	- for best results, p should be evenly divisible by s (i.e. p/s = INT)
+	- using INT for minutes is preferrable, however, FLOAT is fine if p/s = INT
+	- example inputs/outputs may be found in \`sandbox/\` (check log for details)
+	- be sure to concatenate all fastq files output from a single ONT flowcell
 	- dependencies: GNU Parallel [1], GNU Core Utils; see README.md for full list
-	- using INT for minutes is preferrable, FLOAT may work if p/s = INT, e.g. n = 4/0.25 = 16
-	- for best results, concatenate all fastq files from a single ONT flowcell
 
 USAGE:
 	bash nanotimeparse.sh -t <threads> -i </absolute/path/to/nanopore_basecalled.fastq> -s <minutes> -p <minutes>
@@ -113,6 +114,20 @@ if [[ ! -f "$INPUT" ]]; then printf "%s\n" "The input (-i) $INPUT file does not 
 if [[ -z "$SLICE" ]]; then printf "%s\n" "Please specify slice time (-s)."; exit; fi
 if [[ -z "$PERIOD" ]]; then printf "%s\n" "Please specify period time (-p)."; exit; fi
 
+# setup other variables
+runtime=$(date +"%Y%m%d%H%M%S%N")
+window_sec=$(printf "%s" "$SLICE" | awk '{print($0*60)}')
+indir=$(dirname "$INPUT")
+inbase=$(basename "$INPUT")
+outdir="$indir/nanotimeparse-i_$inbase.s_$SLICE.p_$PERIOD"
+if [[ -d "$outdir" ]]; then
+	printf "Warning: It appears this input has already been parsed with these parameters.\nProcess terminating.\n"
+	exit
+else
+	mkdir -p "$outdir/tmp/sort"
+fi
+
+
 # quick and dirty fastq checks
 #	check 1 ensures that every 4th line starting with line 1 starts with the '@' character
 #	check 2 is a very rough check of ONT format by searching for 'start_time=' in headers
@@ -120,43 +135,31 @@ if [[ -z "$PERIOD" ]]; then printf "%s\n" "Please specify period time (-p)."; ex
 fqcheck=$(awk 'NR % 4 == 1' "$INPUT" | cut -c1 | sort -T "$outdir/tmp/sort" | uniq -c | sed -e 's/ \+//' -e 's/ /\t/')
 char=$(printf "$fqcheck" | cut -f2)
 if [[ "$char" != "@" ]]; then
-	printf "%s\n%s\n%s\n%s\n%s\n" "Check 1 error, all headers do not start with '@'." "The input (-i) does not appear to be fastq formatted." "Here's what we found (<count>\t<first character>):" "$fqcheck" "Process terminated."
+	printf "%s\n%s\n%s\n%s\t%s\n%s\n%s\n" "Check 1 error, all headers do not start with '@'." "The input (-i) does not appear to be fastq formatted." "Here's what we found:" "COUNT" "FIRST CHAR" "$fqcheck" "Process terminating."
 	exit
 fi
 totalreads=$(awk 'END{print(NR/4)}' "$INPUT")
 starttimes=$(grep -o "start_time=" "$INPUT" | wc -l)
 if [[ "$totalreads" != "$starttimes" ]]; then
-	printf "%s\n%s\n%s\n" "Check 2 error, there are more start times ($starttimes) than number of reads ($totalreads)." "The input (-i) does not appear to be ONT formatted." "Process terminated."
+	printf "%s\n%s\n%s\n" "Check 2 error, there are more start times ($starttimes) than number of reads ($totalreads)." "The input (-i) does not appear to be ONT formatted." "Process terminating."
 	exit
 fi
 printf "%s\n" "Checks completed successfully."
-# if checks ok, rename some inputs
-fastq="$INPUT"
-window_min="$SLICE"
-period="$PERIOD"
-
-# setup other variables
-runtime=$(date +"%Y%m%d%H%M%S%N")
-window_sec=$(printf "%s" "$window_min" | awk '{print($0*60)}')
-indir=$(dirname "$fastq")
-inbase=$(basename "$fastq")
-outdir="$indir/nanotimeparse-$inbase"
-mkdir -p "$outdir/tmp/sort"
 
 # print commands etc to log
 log="$outdir/nanotimeparse.log-runtime_$runtime"
 printf "\n%s\n" "Runtime $runtime" > "$log"
 printf "%s\n" "nanotimeparse.sh -t $THREADS -i $INPUT -s $SLICE -p $PERIOD" >> "$log"
-printf "%s\t%s\n" "Input fastq:" "$fastq" >> "$log"
-printf "%s\t%s\n" "Window(mins):" "$window_min" >> "$log"
+printf "%s\t%s\n" "Input fastq:" "$INPUT" >> "$log"
+printf "%s\t%s\n" "Window(mins):" "$SLICE" >> "$log"
 printf "%s\t%s\n" "window(sec):" "$window_sec" >> "$log"
-printf "%s\t%s\n" "Period(mins):" "$period" >> "$log"
+printf "%s\t%s\n" "Period(mins):" "$PERIOD" >> "$log"
 
 
 #	MAIN
 #===============================================================================
 # convert fastq to fasta2col, then split into 4000 reads per file
-sed $'$!N;s/\\\n/\t/' "$fastq" | sed $'$!N;s/\\\n/\t/' | cut -f1,2 > "$outdir/tmp/input.fasta2col"
+sed $'$!N;s/\\\n/\t/' "$INPUT" | sed $'$!N;s/\\\n/\t/' | cut -f1,2 > "$outdir/tmp/input.fasta2col"
 sed -i 's/^@/>/' "$outdir/tmp/input.fasta2col"
 split -l 10000 "$outdir/tmp/input.fasta2col" "$outdir/tmp/split_fasta2col."
 
@@ -172,14 +175,12 @@ fi
 basetime=$(sort -T "$outdir/tmp/sort" "$outdir/tmp/since1970.list" | head -1)
 printf "\trun start:\t$basetime\n"
 printf "%s\t%s\n" "basetime:" "$basetime" >> "$log"
-#printf "%s\t%s\n" "lasttime:" "$lasttime" >> "$log"
 
 #	setup cut times
-# iterate starting at $basetime+window_sec ($2*60), out to $basetime+period_sec ($3*60)
 cut_start=$(printf "%0.0f\n" $(bc -l <<< "$basetime+$window_sec"))
 printf "%s\t%s\n" "cut_start:" "$cut_start" >> "$log"
 printf "\tcut start:\t$cut_start\n"
-cut_stop=$(printf "%0.0f\n" $(bc -l <<< "$basetime+($period*60)"))
+cut_stop=$(printf "%0.0f\n" $(bc -l <<< "$basetime+($PERIOD*60)"))
 printf "%s\t%s\n" "cut_stop:" "$cut_stop" >> "$log"
 printf "\tcut stop:\t$cut_stop\n"
 
@@ -188,7 +189,19 @@ if [[ ! -f "$outdir/set1.complete" ]]; then
 	printf "Generating set 1 files...\n"
 	seq "$cut_start" "$window_sec" "$cut_stop" > "$outdir/tmp/since1970.slicetimes"
 	# make separate fasta for each 'time slice'
-	while read time; do awk -F'\t' -v time="$time" '{fnrheader[NR]=$1; fnrseq[NR]=$2}END{for(i=1;i<length(fnrheader);i++){if(fnrheader[i]<time){printf(">%s\n%s\n",fnrheader[i],fnrseq[i])}}}' "$outdir/tmp/since1970.array" > "$outdir/fromStart-$time.fasta"; done < "$outdir/tmp/since1970.slicetimes"
+	while read time; do
+		printf "processing: $basetime\t$time\n"
+		awk -F'\t' -v time="$time" '{
+			fnrheader[NR]=$1
+			fnrseq[NR]=$2
+		}END{
+			for(i=1;i<length(fnrheader);i++){
+				if(fnrheader[i]<time){
+					printf(">%s\n%s\n",fnrheader[i],fnrseq[i])
+				}
+			}
+		}' "$outdir/tmp/since1970.array" > "$outdir/fromStart-$time.fasta"
+	done < "$outdir/tmp/since1970.slicetimes"
 	touch "$outdir/set1.complete"
 else
 	printf "Set 1 already generated, moving on.\n"
@@ -212,12 +225,12 @@ fi
 
 
 printf "Checking total output files...\n"
-expected=$(printf "%0.0f\n" $(bc -l <<< "$PERIOD/$SLICE"))
-actual=$(find $outdir -maxdepth 1 -name "fromStart*fasta" | wc -l)
+expected=$(printf "%0.0f\n" $(bc -l <<< "2*($PERIOD/$SLICE)"))
+actual=$(find $outdir -mindepth 1 -maxdepth 1 -type f -name "from*.fasta" | wc -l)
 if [[ "$expected" == "$actual" ]]; then
-	printf "\t(p/s) == expected == actual :: ($PERIOD/$SLICE) == $expected == $actual\n"
+	printf "\t2*(p/s) == expected == actual :: 2*($PERIOD/$SLICE) == $expected == $actual\n"
 	printf "\tnanotimeparse.sh completed successfully, yay!\n"
 else
-	printf "\t(p/s) != expected != actual :: ($PERIOD/$SLICE) != $expected != $actual\n"
-	printf "\tsomething's not right, booo...\n"
+	printf "\t2*(p/s) != expected != actual :: 2*($PERIOD/$SLICE) != $expected != $actual\n"
+	printf "\tsomething terrible happened, or p/s != INT and this output is what you expected :)\n"
 fi
