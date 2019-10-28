@@ -8,6 +8,7 @@ Get subsets of (-i) Oxford Nanopore Technologies (ONT) basecalled fastq reads in
 
 ## Notes
 
+	- WARNING: there may be identical fasta headers in output fasta files
 	- for best results, p should be evenly divisible by s (i.e. p/s = INT)
 	- using INT for minutes is preferrable, however, FLOAT is fine if p/s = INT
 	- example output, see \`sandbox/nanotimeparse-test.fq/\`, and check log for details
