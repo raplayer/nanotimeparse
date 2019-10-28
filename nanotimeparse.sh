@@ -172,6 +172,7 @@ fi
 #	check 1 ensures that every 4th line starting with line 1 starts with the '@' character
 #	check 2 is a very rough check of ONT format by searching for 'start_time=' in headers
 #			if total reads == number of times 'start_time=' is found, we should be good to parse
+printf "Validating fastq format...\n"
 fqcheck=$(awk 'NR % 4 == 1' "$INPUT" | cut -c1 | sort -T "$outdir/tmp/sort" | uniq -c | sed -e 's/ \+//' -e 's/ /\t/')
 char=$(printf "$fqcheck" | cut -f2)
 if [[ "$char" != "@" ]]; then
@@ -199,6 +200,7 @@ printf "%s\t%s\n" "Period(mins):" "$PERIOD" >> "$log"
 #	MAIN
 #===============================================================================
 # convert fastq to fasta2col, then split into 4000 reads per file
+printf "Converting fastq to fasta2col, then splitting...\n"
 sed $'$!N;s/\\\n/\t/' "$INPUT" | sed $'$!N;s/\\\n/\t/' | cut -f1,2 > "$outdir/tmp/input.fasta2col"
 sed -i 's/^@/>/' "$outdir/tmp/input.fasta2col"
 split -l 10000 "$outdir/tmp/input.fasta2col" "$outdir/tmp/split_fasta2col."
