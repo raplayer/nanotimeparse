@@ -76,6 +76,28 @@ make_since1970()
 export bin outdir
 export -f make_since1970
 
+# Function description:	make_fromstart
+#	arguments:	arg1 - time since 1970 from 'since1970.slicetimes'
+#	actions:	make array of header/seq in awk, print header/seq for headers<time
+#	output:		Generates fasta file per time slice since basetime (start of seq run).
+make_fromstart()
+{
+	time="$1"
+	printf "processing: $basetime\t$time\n"
+	awk -F'\t' -v time="$time" '{
+		fnrheader[NR]=$1
+		fnrseq[NR]=$2
+	}END{
+		for(i=1;i<length(fnrheader);i++){
+			if(fnrheader[i]<time){
+				printf(">%s\n%s\n",fnrheader[i],fnrseq[i])
+			}
+		}
+	}' "$outdir/tmp/since1970.array" > "$outdir/fromStart-$time.fasta"
+}
+export time basetime outdir
+export -f make_fromstart
+
 # Function description:	make_diff
 #	arguments:	arg1 - fasta file containing reads from $basetime to since1970 time in file name
 #				arg2 - same fasta type but containing reads from $basetime to the next time slice
@@ -207,19 +229,8 @@ if [[ ! -f "$outdir/set1.complete" ]]; then
 	printf "Generating set 1 files...\n"
 	seq "$cut_start" "$window_sec" "$cut_stop" > "$outdir/tmp/since1970.slicetimes"
 	# make separate fasta for each 'time slice'
-	while read time; do
-		printf "processing: $basetime\t$time\n"
-		awk -F'\t' -v time="$time" '{
-			fnrheader[NR]=$1
-			fnrseq[NR]=$2
-		}END{
-			for(i=1;i<length(fnrheader);i++){
-				if(fnrheader[i]<time){
-					printf(">%s\n%s\n",fnrheader[i],fnrseq[i])
-				}
-			}
-		}' "$outdir/tmp/since1970.array" > "$outdir/fromStart-$time.fasta"
-	done < "$outdir/tmp/since1970.slicetimes"
+	parallel --xapply --jobs="$THREADS" make_fromstart \
+		::: $(cat "$outdir/tmp/since1970.slicetimes")
 	touch "$outdir/set1.complete"
 else
 	printf "Set 1 already generated, moving on.\n"
