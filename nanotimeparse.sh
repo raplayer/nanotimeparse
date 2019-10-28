@@ -1,9 +1,27 @@
 #!/bin/bash
-# author:	Robert Player
-
+#---------------------------------------------------------------------------------------------------
+# script: nanotimeparse
+# author: Robert Player (robert.player@jhuapl.edu)
+# source: https://github.com/raplayer/nanotimeparse
+#	This script gets subsets of (-i) Oxford Nanopore Technologies (ONT) basecalled fastq reads in
+# slices of (-s) minutes, over a period of (-p) minutes. Input fastq file is output as 2 sets of n
+# fasta files (n = p/s). Set 1 is n fasta files, and each file contains reads generated from the
+# start of the ONT run to each time slice. Set 2 is also n fasta files, but each file contains only
+# newly generated reads between each time slice.
+#---------------------------------------------------------------------------------------------------
+# LICENSE AND DISCLAIMER
+# Copyright (c) 2019 The Johns Hopkins University Applied Physics Laboratory
+#	This program is free software: you can redistribute it and/or modify it under the terms of the
+# GNU Affero General Public License as published by the Free Software Foundation, either version 3
+# of the License, or (at your option) any later version.
+#	This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+# without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#	You should have received a copy of the GNU Affero General Public License along with this
+# program. If not, see <https://www.gnu.org/licenses/>.
+#---------------------------------------------------------------------------------------------------
 
 #	FUNCTIONS
-#===============================================================================
 usage()
 {
 cat << EOF
@@ -30,8 +48,7 @@ OPTIONS:
 	-s	INT or float	time slice in (minutes)
 	-p	INT or float	period of time to slice up since start of sequencing run (minutes)
 
-
-________________________________________________________________________________
+____________________________________________________________________________________________________
 References:
 	1. O. Tange (2011): GNU Parallel - The Command-Line Power Tool, ;login: The USENIX Magazine, February 2011:42-47.
 
