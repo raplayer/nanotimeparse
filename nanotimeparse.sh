@@ -43,8 +43,8 @@ EOF
 #				Converts each to a format usable by the 'date' GNU CoreUtil, stores datetimes in 'datetime.list'.
 #					example, 'start_time=2018-08-05T06:35:49Z' > '2018-08-05 06:35:49'
 #				Call 'date' function on the list, converts datetimes to Unix Epoch time (seconds since 01/01/1970).
-#	output:		A concatenated list of all 'since1970' times for all reads in input.
-#				These times are used as headers for reads in final script output, and are utilized in the make_diff function.
+#	output:		A concatenated list of all 'since1970' times for all reads in input. These times are
+#				used as part of the read header in final output and are utilized in the make_diff function.
 make_since1970()
 {
 	mkdir "$1-tmp"
