@@ -173,10 +173,10 @@ fi
 #	check 2 is a very rough check of ONT format by searching for 'start_time=' in headers
 #			if total reads == number of times 'start_time=' is found, we should be good to parse
 printf "Validating fastq format...\n"
-fqcheck=$(awk 'NR % 4 == 1' "$INPUT" | cut -c1 | sort -T "$outdir/tmp/sort" | uniq -c)
+fqcheck=$(awk 'NR % 4 == 1' "$INPUT" | cut -c1 | sort -T "$outdir/tmp/sort" | uniq)
 char=$(printf "$fqcheck" | cut -f2)
 if [[ "$char" != "@" ]]; then
-	printf "%s\n%s\n%s\n%s\t%s\n%s\n" "Check 1 error, all headers do not start with '@'." "The input (-i) does not appear to be fastq formatted." "Here's what we found:" "FIRST_CHAR" "$fqcheck" "Process terminating."
+	printf "%s\n%s\n%s\n%s\n%s\n%s\n" "Check 1 error, all headers do not start with '@'." "The input (-i) does not appear to be fastq formatted." "Here's what we found:" "$fqcheck" "Process terminating."
 	exit
 fi
 totalreads=$(awk 'END{print(NR/4)}' "$INPUT")
