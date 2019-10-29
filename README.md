@@ -24,6 +24,17 @@ Get subsets of (-i) Oxford Nanopore Technologies (ONT) basecalled fastq reads in
 	-s	INT or FLOAT	time slice in (minutes)
 	-p	INT or FLOAT	period of time to slice up since start of sequencing run (minutes)
 
+### Memory Considerations
+
+When running nanotimeparse, each thread requires ~1/2 the size of your input fastq file in memory.
+
+For Example:
+
+	`nanotimeparse.sh -t 10 -i sample.fastq -s 1 -p 5`
+
+	If input (-i) sample.fastq is 1.0GB, each thread requires ~0.5GB memory.
+
+	Since we're running with 10 threads, the entire run will require ~5GB memory to complete sucessfully.
 
 ## Dependencies
 
@@ -46,6 +57,13 @@ If you'd like to call the tool globally, symbolically link the shell script into
 
 ## License and Copyright
 
+Copyright (c) 2019 The Johns Hopkins University Applied Physics Laboratory
+
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License along with this program. If not, see https://www.gnu.org/licenses/.
 
 ## References
 
