@@ -24,7 +24,7 @@ Get subsets of (-i) Oxford Nanopore Technologies (ONT) basecalled fastq reads in
 	-s	INT or FLOAT	time slice in (minutes)
 	-p	INT or FLOAT	period of time to slice up since start of sequencing run (minutes)
 
-### Memory Considerations
+#### Memory Considerations
 
 When running nanotimeparse, each thread requires ~1/2 the size of your input fastq file in memory.
 
