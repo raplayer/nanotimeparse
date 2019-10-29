@@ -30,11 +30,11 @@ When running nanotimeparse, each thread requires ~1/2 the size of your input fas
 
 For Example:
 
-	`nanotimeparse.sh -t 10 -i sample.fastq -s 1 -p 5`
+`nanotimeparse.sh -t 10 -i sample.fastq -s 1 -p 5`
 
-	If input (-i) sample.fastq is 1.0GB, each thread requires ~0.5GB memory.
+If input (-i) sample.fastq is 1.0GB, each thread requires ~0.5GB memory.
 
-	Since we're running with 10 threads, the entire run will require ~5GB memory to complete sucessfully.
+Since we're running with 10 threads, the entire run will require ~5GB memory to complete sucessfully.
 
 ## Dependencies
 
