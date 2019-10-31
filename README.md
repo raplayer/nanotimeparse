@@ -1,4 +1,5 @@
 <meta name="google-site-verification" content="thZ03i6puJU5pePqHJFqpCRgv_FgA17ToxfvUw2BSZE" />
+
 # nanotimeparse
 
 This is the repository for nanotimeparse. It parses an Oxford Nanopore fastq file on read sequencing start times.
