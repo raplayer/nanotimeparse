@@ -4,6 +4,8 @@
 
 This is the repository for nanotimeparse. It parses an Oxford Nanopore fastq file on read sequencing start times.
 
+![](Figure_S1.gif)
+
 ## Description
 
 Get subsets of (-i) Oxford Nanopore Technologies (ONT) basecalled fastq reads in slices of (-s) minutes, over a period of (-p) minutes. Input fastq file is output as 2 sets of n fasta files (n = p/s). Set 1 is n fasta files, and each file contains reads generated from the start of the ONT run to each time slice. Set 2 is also n fasta files, but each file contains only newly generated reads between each time slice.
