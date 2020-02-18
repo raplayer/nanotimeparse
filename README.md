@@ -4,7 +4,7 @@
 
 This is the repository for nanotimeparse. It parses an Oxford Nanopore fastq file on read sequencing start times.
 
-It can generate the read data that underpins visualizations like this:
+It can generate the read data that underpins visualizations like this from [[1]](https://doi.org/10.1186/s12864-020-6557-5):
 
 ![](Figure_S1.gif)
 
@@ -52,7 +52,7 @@ GNU Parallel [1] and GNU CoreUtils: cat, mkdir, sed, sort, cut, date, paste, bas
 
 ## Installation
 
-The only non-GNU CoreUtils dependency is GNU Parallel [1], please install using the command:
+The only non-GNU CoreUtils dependency is GNU Parallel [[2]](https://www.gnu.org/software/parallel/), please install using the command:
 
 `sudo apt install parallel`
 
@@ -77,5 +77,6 @@ You should have received a copy of the GNU Affero General Public License along w
 
 ## References
 
-1. O. Tange (2011): GNU Parallel - The Command-Line Power Tool, ;login: The USENIX Magazine, February 2011:42-47.
+1. Player, R., Verratti, K., Staab, A. et al. Comparison of the performance of an amplicon sequencing assay based on Oxford Nanopore technology to real-time PCR assays for detecting bacterial biodefense pathogens. BMC Genomics 21, 166 (2020). https://doi.org/10.1186/s12864-020-6557-5
+2. O. Tange (2011): GNU Parallel - The Command-Line Power Tool, ;login: The USENIX Magazine, February 2011:42-47.
 
