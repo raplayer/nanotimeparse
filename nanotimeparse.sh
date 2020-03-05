@@ -125,14 +125,7 @@ export -f make_diff
 #	notes:
 #		echo $? (0 = successful execution)
 # absolute path to script dir
-absolute_path_x="$(readlink -fn -- "$0"; echo x)"
-absolute_path_of_script="${absolute_path_x%x}"
-scriptdir=$(dirname "$absolute_path_of_script")
-if [[ $? != 0 ]]; then
-	echo "Please locate the function 'dirname' and symlink it to this script's bin."
-	echo "example: ln -s /usr/bin/dirname /full/path/to/nanoparse/bin/dirname"
-	exit
-fi
+#	20200305	REMOVED GETTING ABSOLUTE PATH OF SCRIPT DIR
 
 
 # parse args
