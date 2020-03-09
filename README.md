@@ -12,6 +12,10 @@ It can generate the read data that underpins visualizations like this from [[1]]
 
 Get subsets of (-i) Oxford Nanopore Technologies (ONT) basecalled fastq reads in slices of (-s) minutes, over a period of (-p) minutes. Input fastq file is output as 2 sets of n fasta files (n = p/s). Set 1 is n fasta files, and each file contains reads generated from the start of the ONT run to each time slice. Set 2 is also n fasta files, but each file contains only newly generated reads between each time slice.
 
+Please cite nanotimeparse using the following citation:
+
+`Player, R., Verratti, K., Staab, A. et al. Comparison of the performance of an amplicon sequencing assay based on Oxford Nanopore technology to real-time PCR assays for detecting bacterial biodefense pathogens. BMC Genomics 21, 166 (2020). https://doi.org/10.1186/s12864-020-6557-5`
+
 ## Notes
 
 	- WARNING: there may be identical fasta headers in output fasta files
@@ -52,18 +56,23 @@ GNU Parallel [1] and GNU CoreUtils: cat, mkdir, sed, sort, cut, date, paste, bas
 
 ## Installation
 
-The only non-GNU CoreUtils dependency is GNU Parallel [[2]](https://www.gnu.org/software/parallel/), please install using the command:
-
-`sudo apt install parallel`
-
-Clone this repo with:
-
-`git clone https://github.com/raplayer/nanotimeparse.git`
+The only non-GNU CoreUtils dependency is GNU Parallel [[2]](https://www.gnu.org/software/parallel/).
 
 If you'd like to call the tool globally, symbolically link the shell script into a $PATH path. For example:
 
 `sudo ln -s $PWD/nanotimepare/nanotimeparse.sh /usr/local/bin`
 
+#### on Linux
+
+`sudo apt install parallel`
+`git clone https://github.com/raplayer/nanotimeparse.git`
+
+#### on Mac OS X
+
+`sudo apt install parallel`
+`brew install coreutils`
+`brew install gnu-sed`
+`git clone https://github.com/raplayer/nanotimeparse.git`
 
 ## License and Copyright
 
