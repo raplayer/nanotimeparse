@@ -64,15 +64,15 @@ If you'd like to call the tool globally, symbolically link the shell script into
 
 #### on Linux
 
-`sudo apt install parallel`
-`git clone https://github.com/raplayer/nanotimeparse.git`
+	sudo apt install parallel
+	git clone https://github.com/raplayer/nanotimeparse.git
 
 #### on Mac OS X
 
-`sudo apt install parallel`
-`brew install coreutils`
-`brew install gnu-sed`
-`git clone https://github.com/raplayer/nanotimeparse.git`
+	sudo apt install parallel
+	brew install coreutils
+	brew install gnu-sed
+	git clone https://github.com/raplayer/nanotimeparse.git
 
 ## License and Copyright
 
