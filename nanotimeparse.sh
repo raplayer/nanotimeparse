@@ -85,10 +85,10 @@ make_fromstart()
 	time="$1"
 	printf "processing: $basetime\t$time\n"
 	awk -F'\t' -v time="$time" '{
-		fnrheader[NR]=$1
-		fnrseq[NR]=$2
+		fnrheader[NR]=$1;
+		fnrseq[NR]=$2;
 	}END{
-		for(i=1;i<length(fnrheader);i++){
+		for(i=1;i in fnrheader;i++){
 			if(fnrheader[i]<time){
 				printf(">%s\n%s\n",fnrheader[i],fnrseq[i])
 			}
