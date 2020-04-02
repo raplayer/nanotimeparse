@@ -63,14 +63,18 @@ EOF
 #				Call 'date' function on the list, converts datetimes to Unix Epoch time (seconds since 01/01/1970).
 #	output:		A concatenated list of all 'since1970' times for all reads in input. These times are
 #				used as part of the read header in final output and are utilized in the make_diff function.
+# update on 20200402: fix headers so all are unique
+#			The problem is that since1970 times could be shared by multiple reads.
+#			This was causing problems in down-stream analysis of parsed fasta files.
+#			Fix is appending the unique part of the read names from ONT output header (sed 's/ .*//')
 make_since1970()
 {
 	mkdir "$1-tmp"
-	sed -e 's/.*start_time=//' -e 's/Z.*\t/\t/' -e 's/T/ /' "$1" | sort -T "$outdir/tmp/sort" > "$1-tmp/datetime.seq"
-	cut -f1 "$1-tmp/datetime.seq" > "$1-tmp/datetime.list"
+	sed -e 's/ .*start_time=/start_time=/' -e 's/start_time=/\t/' -e 's/Z.*\t/\t/' -e 's/T/ /' "$1" | awk -F'\t' '{printf("%s\t%s\t%s\n",$2,$1,$3)}' | sort -T "$outdir/tmp/sort" > "$1-tmp/ont.datetime.seq"
+	cut -f1 "$1-tmp/ont.datetime.seq" > "$1-tmp/datetime.list"
 	date --file="$1-tmp/datetime.list" +%s > "$1-tmp/since1970.list"
 	cat "$1-tmp/since1970.list" >> "$outdir/tmp/since1970.list"
-	paste <(sort -T "$outdir/tmp/sort" "$1-tmp/since1970.list") <(sort -T "$outdir/tmp/sort" "$1-tmp/datetime.seq" | cut -f2) >> "$outdir/tmp/since1970.array"
+	paste <(sort -T "$outdir/tmp/sort" "$1-tmp/since1970.list") <(sort -T "$outdir/tmp/sort" "$1-tmp/ont.datetime.seq" | cut -f2,3) >> "$outdir/tmp/since1970.array"
 
 }
 export bin outdir
@@ -78,19 +82,19 @@ export -f make_since1970
 
 # Function description:	make_fromstart
 #	arguments:	arg1 - time since 1970 from 'since1970.slicetimes'
-#	actions:	make array of header/seq in awk, print header/seq for headers<time
+#	actions:	make array of time/seq in awk with uniq ont ($2) as index, print ont+time/nseq for headertime<$time
 #	output:		Generates fasta file per time slice since basetime (start of seq run).
 make_fromstart()
 {
 	time="$1"
 	printf "processing: $basetime\t$time\n"
 	awk -F'\t' -v time="$time" '{
-		fnrheader[NR]=$1;
-		fnrseq[NR]=$2;
+		seqtime[$2]=$1;
+		seq[$2]=$3;
 	}END{
-		for(i=1;i in fnrheader;i++){
-			if(fnrheader[i]<time){
-				printf(">%s\n%s\n",fnrheader[i],fnrseq[i])
+		for(h in seqtime){
+			if(seqtime[h]<time){
+				printf("%s %s\n%s\n",h,seqtime[h],seq[h])
 			}
 		}
 	}' "$outdir/tmp/since1970.array" > "$outdir/fromStart-$time.fasta"
