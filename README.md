@@ -4,7 +4,9 @@
 
 This is the repository for nanotimeparse. It parses an Oxford Nanopore fastq file on read sequencing start times.
 
-It can generate the read data that underpins visualizations like this from [[1]](https://doi.org/10.1186/s12864-020-6557-5):
+It can generate the read data that underpins visualizations like these from (also please cite this publication if using nanotimeparse):
+
+[`Player, R., Verratti, K., Staab, A. et al. Comparison of the performance of an amplicon sequencing assay based on Oxford Nanopore technology to real-time PCR assays for detecting bacterial biodefense pathogens. BMC Genomics 21, 166 (2020). https://doi.org/10.1186/s12864-020-6557-5`](https://doi.org/10.1186/s12864-020-6557-5):
 
 ![](Figure_S1.gif)
 
@@ -13,10 +15,6 @@ It can generate the read data that underpins visualizations like this from [[1]]
 ## Description
 
 Get subsets of (-i) Oxford Nanopore Technologies (ONT) basecalled fastq reads in slices of (-s) minutes, over a period of (-p) minutes. Input fastq file is output as 2 sets of n fasta files (n = p/s). Set 1 is n fasta files, and each file contains reads generated from the start of the ONT run to each time slice. Set 2 is also n fasta files, but each file contains only newly generated reads between each time slice.
-
-Please cite nanotimeparse using the following citation:
-
-`Player, R., Verratti, K., Staab, A. et al. Comparison of the performance of an amplicon sequencing assay based on Oxford Nanopore technology to real-time PCR assays for detecting bacterial biodefense pathogens. BMC Genomics 21, 166 (2020). https://doi.org/10.1186/s12864-020-6557-5`
 
 ## Notes
 

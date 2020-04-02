@@ -31,7 +31,6 @@ Help message for \`nanotimeparse.sh\`:
 	Get subsets of (-i) Oxford Nanopore Technologies (ONT) basecalled fastq reads in slices of (-s) minutes, over a period of (-p) minutes. Input fastq file is output as 2 sets of n fasta files (n = p/s). Set 1 is n fasta files, and each file contains reads generated from the start of the ONT run to each time slice. Set 2 is also n fasta files, but each file contains only newly generated reads between each time slice.
 
 NOTES:
-	- WARNING: there may be identical fasta headers in output fasta files
 	- for best results, p should be evenly divisible by s (i.e. p/s = INT)
 	- using INT for minutes is preferrable, however, FLOAT is fine if p/s = INT
 	- example inputs/outputs may be found in \`sandbox/\` (check log for details)
@@ -126,12 +125,6 @@ export -f make_diff
 
 #	DEFAULTS & INPUTS & CHECKS
 #===============================================================================
-#	notes:
-#		echo $? (0 = successful execution)
-# absolute path to script dir
-#	20200305	REMOVED GETTING ABSOLUTE PATH OF SCRIPT DIR
-
-
 # parse args
 while getopts "ht:i:s:p:" OPTION
 do
