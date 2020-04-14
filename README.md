@@ -10,9 +10,9 @@ It can generate the read data that underpins visualizations like these from (als
 
 [`Player, R., Verratti, K., Staab, A. et al. Comparison of the performance of an amplicon sequencing assay based on Oxford Nanopore technology to real-time PCR assays for detecting bacterial biodefense pathogens. BMC Genomics 21, 166 (2020). https://doi.org/10.1186/s12864-020-6557-5`](https://doi.org/10.1186/s12864-020-6557-5):
 
-![](Figure_S1.gif)
+![](sandbox/Figure_S1.gif)
 
-![](timeparse-6hr_14plex-all.png)
+![](sandbox/timeparse-6hr_14plex-all.png)
 
 ## Description
 
