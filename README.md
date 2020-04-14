@@ -37,7 +37,7 @@ Get subsets of (-i) Oxford Nanopore Technologies (ONT) basecalled fastq reads in
 
 #### Runtime:
 
-Executing with 10 threads (@2.1GHz), and slicing on every hour over a 48 hour period (96 fastq files as output), nanotimeparse takes about 30 minutes to parse 1.2M reads (~15GB) into both sets (and memory maxes out at (15GB/2)*10~=75GB, see below). Of course this all depends on read N50 with respect to file sizes and memory requirements.
+Executing with 10 threads (@2.1GHz), and slicing on every hour over a 48 hour period (96 fastq files as output), nanotimeparse takes about 30 minutes to parse 1.2M reads (\~15GB) into both sets (and memory maxes out at (15GB/2)*10=75GB, see below). Of course this all depends on read N50 with respect to file sizes and memory requirements.
 
 #### Memory Considerations:
 
