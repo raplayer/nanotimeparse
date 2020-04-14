@@ -1,0 +1,10 @@
+
+Runtime 20200413215133978396426
+nanotimeparse.sh -t 5 -i /data/apps/src/nanotimeparse/sandbox/test.fq -s 1 -p 10
+Input fastq:	/data/apps/src/nanotimeparse/sandbox/test.fq
+Window(mins):	1
+window(sec):	60
+Period(mins):	10
+basetime:	1533364487
+cut_start:	1533364547
+cut_stop:	1533365087
