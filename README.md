@@ -59,7 +59,7 @@ The only non-GNU CoreUtils dependency is GNU Parallel [[2]](https://www.gnu.org/
 
 If you'd like to call the tool globally, symbolically link the shell script into a $PATH path. For example:
 
-`sudo ln -s $PWD/nanotimepare/nanotimeparse.sh /usr/local/bin`
+`sudo ln -s $PWD/nanotimeparse/nanotimeparse.sh /usr/local/bin`
 
 #### on Linux
 
@@ -75,7 +75,7 @@ If you'd like to call the tool globally, symbolically link the shell script into
 
 ## License and Copyright
 
-Copyright (c) 2019 The Johns Hopkins University Applied Physics Laboratory
+Copyright (c) 2020 The Johns Hopkins University Applied Physics Laboratory
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
