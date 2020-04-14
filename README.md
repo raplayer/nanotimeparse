@@ -41,15 +41,13 @@ Executing with 10 threads (@2.1GHz), and slicing on every hour over a 48 hour pe
 
 #### Memory Considerations:
 
-When running nanotimeparse, each thread requires ~1/2 the size of your input fastq file in memory.
+If memory is limited, use less threads. When running nanotimeparse, each thread requires approximately the size of your input fastq file in memory. Unfortunately this limits the user to a maximum file size equal to the amount of memory on their computer.
 
 For Example:
 
 `nanotimeparse.sh -t 10 -i sample.fastq -s 1 -p 5`
 
-If input (-i) sample.fastq is 1.0GB, each thread requires ~0.5GB memory.
-
-Since we're running with 10 threads, the entire run will require ~5GB memory to complete successfully.
+If input (-i) sample.fastq is 1.0 GB, each thread requires \~1 GB memory. Since we're running with 10 threads, the entire run will require \~10 GB memory to complete successfully.
 
 ## Dependencies
 
