@@ -22,6 +22,7 @@
 #---------------------------------------------------------------------------------------------------
 
 #	FUNCTIONS
+#===============================================================================
 usage()
 {
 cat << EOF
@@ -125,7 +126,7 @@ export -f make_diff
 
 
 
-#	DEFAULTS & INPUTS & CHECKS
+#	INPUTS & CHECKS & DEFAULTS
 #===============================================================================
 # parse args
 while getopts "ht:i:s:p:" OPTION
@@ -146,7 +147,7 @@ if [[ ! -f "$INPUT" ]]; then printf "%s\n" "The input (-i) $INPUT file does not 
 if [[ -z "$SLICE" ]]; then printf "%s\n" "Please specify slice time (-s)."; exit; fi
 if [[ -z "$PERIOD" ]]; then printf "%s\n" "Please specify period time (-p)."; exit; fi
 
-# setup other variables
+# setup defaults
 runtime=$(date +"%Y%m%d%H%M%S%N")
 window_sec=$(printf "%s" "$SLICE" | awk '{print($0*60)}')
 indir=$(dirname "$INPUT")
