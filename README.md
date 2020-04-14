@@ -2,7 +2,9 @@
 
 # nanotimeparse
 
-This is the repository for nanotimeparse. It parses an Oxford Nanopore fastq file on read sequencing start times.
+_nanotimeparse_ parses an Oxford Nanopore fastq file on read sequencing start times found in the fastq headers.
+
+It does not require the `sequencing_summary_<runID>.txt` file output from the MinKNOW software.
 
 It can generate the read data that underpins visualizations like these from (also please cite this publication if using nanotimeparse):
 
@@ -14,14 +16,13 @@ It can generate the read data that underpins visualizations like these from (als
 
 ## Description
 
-Get subsets of (-i) Oxford Nanopore Technologies (ONT) basecalled fastq reads in slices of (-s) minutes, over a period of (-p) minutes. Input fastq file is output as 2 sets of n fasta files (n = p/s). Set 1 is n fasta files, and each file contains reads generated from the start of the ONT run to each time slice. Set 2 is also n fasta files, but each file contains only newly generated reads between each time slice.
+Get subsets of (-i) Oxford Nanopore Technologies (ONT) basecalled fastq reads in slices of (-s) minutes, over a period of (-p) minutes. Input fastq file is output as 2 sets of _n_ fastq files (_n = p/s_). Set 1 is _n_ fastq files, and each file contains reads generated from the start of the ONT run to each time slice. Set 2 is also _n_ fastq files, but each file contains only newly generated reads between each time slice.
 
 ## Notes
 
-	- WARNING: there may be identical fasta headers in output fasta files
 	- for best results, p should be evenly divisible by s (i.e. p/s = INT)
 	- using INT for minutes is preferrable, however, FLOAT is fine if p/s = INT
-	- example output, see \`sandbox/nanotimeparse-test.fq/\`, and check log for details
+	- example output, see `sandbox/nanotimeparse-i_test.fq.s_1.p_10/`, and check log for details
 	- be sure to concatenate all fastq files output from a single ONT flowcell
 
 ## Usage
@@ -36,7 +37,7 @@ Get subsets of (-i) Oxford Nanopore Technologies (ONT) basecalled fastq reads in
 
 #### Runtime:
 
-Executing with *10 threads* (@2.1GHz), and slicing on every hour over a 48 hour period (*96 fasta files* as output), nanotimeparse takes about *30 minutes* to parse *1.2M reads (~15GB)* into both sets (and memory maxes out at (15GB/2)*10~=75GB, see below).
+Executing with 10 threads (@2.1GHz), and slicing on every hour over a 48 hour period (96 fastq files as output), nanotimeparse takes about 30 minutes to parse 1.2M reads (~15GB) into both sets (and memory maxes out at (15GB/2)*10~=75GB, see below). Of course this all depends on read N50 with respect to file sizes and memory requirements.
 
 #### Memory Considerations:
 

@@ -5,8 +5,8 @@
 # source: https://github.com/raplayer/nanotimeparse
 #	This script gets subsets of (-i) Oxford Nanopore Technologies (ONT) basecalled fastq reads in
 # slices of (-s) minutes, over a period of (-p) minutes. Input fastq file is output as 2 sets of n
-# fasta files (n = p/s). Set 1 is n fasta files, and each file contains reads generated from the
-# start of the ONT run to each time slice. Set 2 is also n fasta files, but each file contains only
+# fastq files (n = p/s). Set 1 is n fastq files, and each file contains reads generated from the
+# start of the ONT run to each time slice. Set 2 is also n fastq files, but each file contains only
 # newly generated reads between each time slice.
 #---------------------------------------------------------------------------------------------------
 # LICENSE AND DISCLAIMER
@@ -28,7 +28,7 @@ cat << EOF
 
 Help message for \`nanotimeparse.sh\`:
 
-	Get subsets of (-i) Oxford Nanopore Technologies (ONT) basecalled fastq reads in slices of (-s) minutes, over a period of (-p) minutes. Input fastq file is output as 2 sets of n fasta files (n = p/s). Set 1 is n fasta files, and each file contains reads generated from the start of the ONT run to each time slice. Set 2 is also n fasta files, but each file contains only newly generated reads between each time slice.
+	Get subsets of (-i) Oxford Nanopore Technologies (ONT) basecalled fastq reads in slices of (-s) minutes, over a period of (-p) minutes. Input fastq file is output as 2 sets of n fastq files (n = p/s). Set 1 is n fastq files, and each file contains reads generated from the start of the ONT run to each time slice. Set 2 is also n fastq files, but each file contains only newly generated reads between each time slice.
 
 NOTES:
 	- for best results, p should be evenly divisible by s (i.e. p/s = INT)
@@ -55,8 +55,8 @@ EOF
 }
 
 # Function description:	make_since1970
-#	arguments:	arg1 - one of the split fasta files derived from input fastq
-#	actions:	Pulls start datetime of read generation from header of each read in the fasta file.
+#	arguments:	arg1 - one of the split fastq files derived from input fastq
+#	actions:	Pulls start datetime of read generation from header of each read in the fastq file.
 #				Converts each to a format usable by the 'date' GNU CoreUtil, stores datetimes in 'datetime.list'.
 #					example, 'start_time=2018-08-05T06:35:49Z' > '2018-08-05 06:35:49'
 #				Call 'date' function on the list, converts datetimes to Unix Epoch time (seconds since 01/01/1970).
@@ -64,16 +64,16 @@ EOF
 #				used as part of the read header in final output and are utilized in the make_diff function.
 # update on 20200402: fix headers so all are unique
 #			The problem is that since1970 times could be shared by multiple reads.
-#			This was causing problems in down-stream analysis of parsed fasta files.
+#			This was causing problems in down-stream analysis of parsed fastq files.
 #			Fix is appending the unique part of the read names from ONT output header (sed 's/ .*//')
 make_since1970()
 {
 	mkdir "$1-tmp"
-	sed -e 's/ .*start_time=/start_time=/' -e 's/start_time=/\t/' -e 's/Z.*\t/\t/' -e 's/T/ /' "$1" | awk -F'\t' '{printf("%s\t%s\t%s\n",$2,$1,$3)}' | sort -T "$outdir/tmp/sort" > "$1-tmp/ont.datetime.seq"
+	sed -e 's/ .*start_time=/start_time=/' -e 's/start_time=/\t/' -e 's/Z\t/\t/' -e 's/\([0-9]\)T\([0-9]\)/\1 \2/' "$1" | awk -F'\t' '{printf("%s\t%s\t%s\t%s\t%s\n",$2,$1,$3,$4,$5)}' | sort -V -T "$outdir/tmp/sort" > "$1-tmp/ont.datetime.seq"
 	cut -f1 "$1-tmp/ont.datetime.seq" > "$1-tmp/datetime.list"
 	date --file="$1-tmp/datetime.list" +%s > "$1-tmp/since1970.list"
 	cat "$1-tmp/since1970.list" >> "$outdir/tmp/since1970.list"
-	paste <(sort -T "$outdir/tmp/sort" "$1-tmp/since1970.list") <(sort -T "$outdir/tmp/sort" "$1-tmp/ont.datetime.seq" | cut -f2,3) >> "$outdir/tmp/since1970.array"
+	paste <(sort -V -T "$outdir/tmp/sort" "$1-tmp/since1970.list") <(sort -V -T "$outdir/tmp/sort" "$1-tmp/ont.datetime.seq" | cut -f2,3,4,5) >> "$outdir/tmp/since1970.array"
 
 }
 export bin outdir
@@ -82,7 +82,7 @@ export -f make_since1970
 # Function description:	make_fromstart
 #	arguments:	arg1 - time since 1970 from 'since1970.slicetimes'
 #	actions:	make array of time/seq in awk with uniq ont ($2) as index, print ont+time/nseq for headertime<$time
-#	output:		Generates fasta file per time slice since basetime (start of seq run).
+#	output:		Generates fastq file per time slice since basetime (start of seq run).
 make_fromstart()
 {
 	time="$1"
@@ -90,33 +90,35 @@ make_fromstart()
 	awk -F'\t' -v time="$time" '{
 		seqtime[$2]=$1;
 		seq[$2]=$3;
+		qual[$2]=$5;
 	}END{
 		for(h in seqtime){
 			if(seqtime[h]<time){
-				printf("%s %s\n%s\n",h,seqtime[h],seq[h])
+				printf("%s %s\n%s\n+\n%s\n",h,seqtime[h],seq[h],qual[h])
 			}
 		}
-	}' "$outdir/tmp/since1970.array" > "$outdir/fromStart-$time.fasta"
+	}' "$outdir/tmp/since1970.array" > "$outdir/fromStart-$time.fastq"
 }
 export time basetime outdir
 export -f make_fromstart
 
 # Function description:	make_diff
-#	arguments:	arg1 - fasta file containing reads from $basetime to since1970 time in file name
-#				arg2 - same fasta type but containing reads from $basetime to the next time slice
-#	actions:	Finds non-overlapping reads in arg1 and arg2 fastas via 'comm -13' function.
+#	arguments:	arg1 - fastq file containing reads from $basetime to since1970 time in file name
+#				arg2 - same fastq type but containing reads from $basetime to the next time slice
+#	actions:	Finds non-overlapping reads in arg1 and arg2 fastqs via 'comm -13' function.
 #					comm:	Compare sorted files FILE1 and FILE2 line by line.
 #					  -1              suppress column 1 (lines unique to FILE1)
 #					  -2              suppress column 2 (lines unique to FILE2)	<- omitted
 #					  -3              suppress column 3 (lines that appear in both files)
-#	output:		A fasta file containing only newly generated reads between times indicated in the file names.
+#	output:		A fastq file containing only newly generated reads between times indicated in the file names.
 make_diff()
 {
-	t1=$(basename "$1" | sed -e 's/.*-//' -e 's/\.fasta//')
-	t2=$(basename "$2" | sed -e 's/.*-//' -e 's/\.fasta//')
-	printf "processing: $t1\t$t2\n"
-	comm -13 <(grep "^>" "$1" | sort -T "$outdir/tmp/sort") <(grep "^>" "$2" | sort -T "$outdir/tmp/sort") > "$outdir/tmp/diff.from$t1-$t2"
-	grep -A1 -f "$outdir/tmp/diff.from$t1-$t2" "$2"  | grep -v "\-\-" > "$outdir/from$t1-$t2.fasta"
+	t1=$(basename "$1" | sed -e 's/.*-//' -e 's/\.fastq//')
+	t2=$(basename "$2" | sed -e 's/.*-//' -e 's/\.fastq//')
+	printf "processing: $t1 to $t2\n"
+	# sort on second column will throw warning from comm
+	comm -13 <(sed $'$!N;s/\\\n/\t/' "$1" | sed $'$!N;s/\\\n/\t/' | cut -f1 | sort -k2 -T "$outdir/tmp/sort") <(sed $'$!N;s/\\\n/\t/' "$2" | sed $'$!N;s/\\\n/\t/' | cut -f1 | sort -k2 -T "$outdir/tmp/sort") > "$outdir/tmp/diff.from$t1-$t2" 2> /dev/null
+	grep -A3 -f "$outdir/tmp/diff.from$t1-$t2" "$2"  | grep -v "^\-\-$" > "$outdir/from$t1-$t2.fastq"
 }
 export t1 t2 outdir
 export -f make_diff
@@ -189,16 +191,15 @@ printf "%s\t%s\n" "Period(mins):" "$PERIOD" >> "$log"
 
 #	MAIN
 #===============================================================================
-# convert fastq to fasta2col, then split into 4000 reads per file
-printf "Converting fastq to fasta2col, then splitting...\n"
-sed $'$!N;s/\\\n/\t/' "$INPUT" | sed $'$!N;s/\\\n/\t/' | cut -f1,2 > "$outdir/tmp/input.fasta2col"
-sed -i 's/^@/>/' "$outdir/tmp/input.fasta2col"
-split -l 10000 "$outdir/tmp/input.fasta2col" "$outdir/tmp/split_fasta2col."
+# convert fastq to fastq4col, then split into 4000 reads per file
+printf "Converting fastq to fastq4col, then splitting...\n"
+sed $'$!N;s/\\\n/\t/' "$INPUT" | sed $'$!N;s/\\\n/\t/' > "$outdir/tmp/input.fastq4col"
+split -l 10000 "$outdir/tmp/input.fastq4col" "$outdir/tmp/split_fastq4col."
 
 # get list of all start timepoints for all reads
 if [[ ! -f "$outdir/tmp/since1970.list" ]]; then
 	printf "Making read start time list...\n"
-	find "$outdir/tmp/" -name "split_fasta2col.*" -print0 | parallel -0 -n 1 -P "$THREADS" -I '{}' make_since1970 '{}'
+	find "$outdir/tmp/" -name "split_fastq4col.*" -print0 | parallel -0 -n 1 -P "$THREADS" -I '{}' make_since1970 '{}'
 else
 	printf "The file 'since1970.list' already exists @ '$outdir/'\n"
 fi
@@ -220,7 +221,7 @@ printf "\tcut stop:\t$cut_stop\n"
 if [[ ! -f "$outdir/set1.complete" ]]; then
 	printf "Generating set 1 files...\n"
 	seq "$cut_start" "$window_sec" "$cut_stop" > "$outdir/tmp/since1970.slicetimes"
-	# make separate fasta for each 'time slice'
+	# make separate fastq for each 'time slice'
 	parallel --xapply --jobs="$THREADS" make_fromstart \
 		::: $(cat "$outdir/tmp/since1970.slicetimes")
 	touch "$outdir/set1.complete"
@@ -229,16 +230,16 @@ else
 fi
 
 
-# only output reads produced during the time slice
-# from 'basetime' to 'cut_start' (the first fasta)
+# only output reads produced during each time slice
+# from 'basetime' to 'cut_start' (the first fastq)
 if [[ ! -f "$outdir/set2.complete" ]]; then
 	printf "Generating set 2 files...\n"
 	printf "processing: $basetime\t$cut_start\n"
-	cat "$outdir/fromStart-$cut_start.fasta" > "$outdir/from$basetime-$cut_start.fasta"
+	cat "$outdir/fromStart-$cut_start.fastq" > "$outdir/from$basetime-$cut_start.fastq"
 	# and the rest
 	parallel --xapply --jobs="$THREADS" make_diff \
-		::: $(find "$outdir" -maxdepth 1 -name "fromStart*fasta" | sort -T "$outdir/tmp/sort" | head -n-1) \
-		::: $(find "$outdir" -maxdepth 1 -name "fromStart*fasta" | sort -T "$outdir/tmp/sort" | tail -n+2)
+		::: $(find "$outdir" -maxdepth 1 -name "fromStart*fastq" | sort -T "$outdir/tmp/sort" | head -n-1) \
+		::: $(find "$outdir" -maxdepth 1 -name "fromStart*fastq" | sort -T "$outdir/tmp/sort" | tail -n+2)
 	touch "$outdir/set2.complete"
 else
 	printf "Set 2 already generated, moving on.\n"
@@ -247,7 +248,7 @@ fi
 
 printf "Checking total output files...\n"
 expected=$(printf "%0.0f\n" $(bc -l <<< "2*($PERIOD/$SLICE)"))
-actual=$(find $outdir -mindepth 1 -maxdepth 1 -type f -name "from*.fasta" | wc -l)
+actual=$(find $outdir -mindepth 1 -maxdepth 1 -type f -name "from*.fastq" | wc -l)
 if [[ "$expected" == "$actual" ]]; then
 	printf "\t2*(p/s) == expected == actual :: 2*($PERIOD/$SLICE) == $expected == $actual\n"
 	printf "\tnanotimeparse.sh completed successfully, yay!\n"
