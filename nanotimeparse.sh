@@ -69,7 +69,7 @@ EOF
 make_since1970()
 {
 	mkdir "$1-tmp"
-	sed -e 's/ .*start_time=/start_time=/' -e 's/start_time=/\t/' -e 's/Z\t/\t/' -e 's/\([0-9]\)T\([0-9]\)/\1 \2/' "$1" | awk -F'\t' '{printf("%s\t%s\t%s\t%s\t%s\n",$2,$1,$3,$4,$5)}' | sort -V -T "$outdir/tmp/sort" > "$1-tmp/ont.datetime.seq"
+	sed -e 's/ .*start_time=/start_time=/' -e 's/start_time=/\t/' -e 's/Z .*\t\([A|C|G|T]\+\)/\t\1/' -e 's/\([0-9]\)T\([0-9]\)/\1 \2/' "$1" | awk -F'\t' '{printf("%s\t%s\t%s\t%s\t%s\n",$2,$1,$3,$4,$5)}' | sort -V -T "$outdir/tmp/sort" > "$1-tmp/ont.datetime.seq"
 	cut -f1 "$1-tmp/ont.datetime.seq" > "$1-tmp/datetime.list"
 	date --file="$1-tmp/datetime.list" +%s > "$1-tmp/since1970.list"
 	cat "$1-tmp/since1970.list" >> "$outdir/tmp/since1970.list"
