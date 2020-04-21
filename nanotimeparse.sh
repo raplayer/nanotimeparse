@@ -117,8 +117,8 @@ make_diff()
 	t1=$(basename "$1" | sed -e 's/.*-//' -e 's/\.fastq//')
 	t2=$(basename "$2" | sed -e 's/.*-//' -e 's/\.fastq//')
 	printf "processing: $t1 to $t2\n"
-	# sort on second column will throw warning from comm
-	comm -13 <(sed $'$!N;s/\\\n/\t/' "$1" | sed $'$!N;s/\\\n/\t/' | cut -f1 | sort -k2 -T "$outdir/tmp/sort") <(sed $'$!N;s/\\\n/\t/' "$2" | sed $'$!N;s/\\\n/\t/' | cut -f1 | sort -k2 -T "$outdir/tmp/sort") > "$outdir/tmp/diff.from$t1-$t2" 2> /dev/null
+	# sort on second column (time since 1970) will throw warning from comm (not actually a problem)
+	comm -13 <(awk 'NR % 4 == 1' "$1" | sort -k2 -T "$outdir/tmp/sort") <(awk 'NR % 4 == 1' "$2" | sort -k2 -T "$outdir/tmp/sort") > "$outdir/tmp/diff.from$t1-$t2" 2> /dev/null
 	grep -A3 -f "$outdir/tmp/diff.from$t1-$t2" "$2"  | grep -v "^\-\-$" > "$outdir/from$t1-$t2.fastq"
 }
 export t1 t2 outdir
