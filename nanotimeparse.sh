@@ -74,8 +74,7 @@ make_since1970()
 	cut -f1 "$1-tmp/ont.datetime.seq" > "$1-tmp/datetime.list"
 	date --file="$1-tmp/datetime.list" +%s > "$1-tmp/since1970.list"
 	cat "$1-tmp/since1970.list" >> "$outdir/tmp/since1970.list"
-	paste <(sort -V -T "$outdir/tmp/sort" "$1-tmp/since1970.list") <(sort -V -T "$outdir/tmp/sort" "$1-tmp/ont.datetime.seq" | cut -f2,3,4,5) >> "$outdir/tmp/since1970.array"
-
+	paste <(sort -V -T "$outdir/tmp/sort" "$1-tmp/since1970.list") <(sort -V -T "$outdir/tmp/sort" "$1-tmp/ont.datetime.seq" | cut -f2,3,4,5) > "$1-tmp/since1970.array"
 }
 export bin outdir
 export -f make_since1970
@@ -200,7 +199,9 @@ split -l 10000 "$outdir/tmp/input.fastq4col" "$outdir/tmp/split_fastq4col."
 # get list of all start timepoints for all reads
 if [[ ! -f "$outdir/tmp/since1970.list" ]]; then
 	printf "Making read start time list...\n"
-	find "$outdir/tmp/" -name "split_fastq4col.*" -print0 | parallel -0 -n 1 -P "$THREADS" -I '{}' make_since1970 '{}'
+	find "$outdir/tmp/" -maxdepth 1 -type f -name "split_fastq4col.*" -print0 | parallel -0 -n 1 -P "$THREADS" -I '{}' make_since1970 '{}'
+	# concat all 'since1970.array' files
+	find "$outdir/tmp/" -mindepth 2 -maxdepth 2 -type f -name "since1970.array" -exec cat {} + > "$outdir/tmp/since1970.array"
 else
 	printf "The file 'since1970.list' already exists @ '$outdir/'\n"
 fi
